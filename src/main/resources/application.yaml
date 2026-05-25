@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: syfe
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/syfe
+    username: root
+    password: swastik
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  session:
+    store-type: none
+    timeout: 30m
+
+server:
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        name: SYFE_SESSION
+        http-only: true
+        same-site: strict
+        max-age: 1800
