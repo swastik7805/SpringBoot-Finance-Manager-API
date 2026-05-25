@@ -9,3 +9,5 @@ graph TD
     GlobalExceptionHandler -->|Returns| CustomApiResponse[Custom API Response]
 ```
 
+# Session-Based Authentication
+![alt text](image-1.png)
