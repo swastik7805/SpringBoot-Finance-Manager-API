@@ -3,11 +3,13 @@ spring:
     name: syfe
 
   datasource:
-    url: jdbc:mysql://localhost:3306/syfe
-    username: root
-    password: swastik
+    url: jdbc:postgresql://ep-blue-dawn-aq4axvnn-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+    username: neondb_owner
+    password: npg_8VCgqDN9XMmx
+    driver-class-name: org.postgresql.Driver
 
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
