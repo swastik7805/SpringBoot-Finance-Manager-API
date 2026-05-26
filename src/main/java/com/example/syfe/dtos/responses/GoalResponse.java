@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -17,9 +16,9 @@ public class GoalResponse {
     private Long id;
     private String goalName;
     private BigDecimal targetAmount;
-    private BigDecimal currentProgress;
-    private LocalDate startDate;
     private LocalDate targetDate;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDate startDate;
+    private BigDecimal currentProgress;
+    private Double progressPercentage;
+    private BigDecimal remainingAmount;
 }

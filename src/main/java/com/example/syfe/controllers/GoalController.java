@@ -28,8 +28,8 @@ public class GoalController {
 
     //GET /api/goals
     @GetMapping
-    public ResponseEntity<List<GoalResponse>> getAllGoals() {
-        return ResponseEntity.ok(goalService.getAllGoals());
+    public ResponseEntity<Map<String, List<GoalResponse>>> getAllGoals() {
+        return ResponseEntity.ok(Map.of("goals", goalService.getAllGoals()));
     }
 
     //GET /api/goals/{id}

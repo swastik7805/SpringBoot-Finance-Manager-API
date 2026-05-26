@@ -5,7 +5,7 @@ import com.example.syfe.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -36,4 +36,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("user") User user,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    //Calculate net savings (Total Income - Total Expenses) since goal start date.
+    @Query("""
+            SELECT COALESCE(SUM(CASE WHEN t.type = com.example.syfe.enums.TransactionType.INCOME THEN t.amount ELSE -t.amount END), 0)
+            FROM Transaction t
+            WHERE t.user = :user AND t.date >= :startDate
+            """)
+    BigDecimal calculateNetSavingsSinceStartDate(
+            @Param("user") User user,
+            @Param("startDate") LocalDate startDate);
 }

@@ -40,11 +40,8 @@ public class GoalService {
 
         // Validate dates
         LocalDate startDate = request.getStartDate() != null ? request.getStartDate() : LocalDate.now();
-        if (!request.getTargetDate().isAfter(LocalDate.now())) {
-            throw new BusinessRuleException("Target date must be in the future");
-        }
-        if (startDate.isAfter(request.getTargetDate())) {
-            throw new BusinessRuleException("Start date cannot be after the target date");
+        if (!request.getTargetDate().isAfter(startDate)) {
+            throw new BusinessRuleException("Target date must be chronologically after the start date");
         }
 
         Goal goal = Goal.builder()
@@ -86,11 +83,8 @@ public class GoalService {
         Goal goal=goalRepository.findByIdAndUser(id,currentUser).orElseThrow(()->new ResourceNotFoundException("Goal", "id", id));
 
         // Validate new target date
-        if (!request.getTargetDate().isAfter(LocalDate.now())) {
-            throw new BusinessRuleException("Target date must be in the future");
-        }
-        if (goal.getStartDate().isAfter(request.getTargetDate())) {
-            throw new BusinessRuleException("Target date cannot be before the start date");
+        if (!request.getTargetDate().isAfter(goal.getStartDate())) {
+            throw new BusinessRuleException("Target date must be chronologically after the start date");
         }
 
         goal.setTargetAmount(request.getTargetAmount());
@@ -112,31 +106,30 @@ public class GoalService {
 
     //Helpers 
     private BigDecimal calculateProgress(Goal goal, User user) {
-        List<Transaction> transactionsSinceStart = transactionRepository.findByUserAndDateBetween(user, goal.getStartDate(), LocalDate.now());
-
-        BigDecimal totalIncome = transactionsSinceStart.stream()
-                .filter(t -> t.getType() == TransactionType.INCOME)
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalExpenses = transactionsSinceStart.stream()
-                .filter(t -> t.getType() == TransactionType.EXPENSE)
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return totalIncome.subtract(totalExpenses);
+        BigDecimal progress = transactionRepository.calculateNetSavingsSinceStartDate(user, goal.getStartDate());
+        return progress != null ? progress : BigDecimal.ZERO;
     }
 
     private GoalResponse mapToResponse(Goal goal, BigDecimal currentProgress) {
+        BigDecimal remainingAmount = goal.getTargetAmount().subtract(currentProgress);
+        if (remainingAmount.compareTo(BigDecimal.ZERO) < 0) {
+            remainingAmount = BigDecimal.ZERO;
+        }
+
+        Double progressPercentage = 0.0;
+        if (goal.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
+            progressPercentage = currentProgress.divide(goal.getTargetAmount(), 4, java.math.RoundingMode.HALF_UP).multiply(new BigDecimal("100")).doubleValue();
+        }
+
         return GoalResponse.builder()
                 .id(goal.getId())
                 .goalName(goal.getGoalName())
                 .targetAmount(goal.getTargetAmount())
-                .currentProgress(currentProgress)
-                .startDate(goal.getStartDate())
                 .targetDate(goal.getTargetDate())
-                .createdAt(goal.getCreatedAt())
-                .updatedAt(goal.getUpdatedAt())
+                .startDate(goal.getStartDate())
+                .currentProgress(currentProgress)
+                .progressPercentage(progressPercentage)
+                .remainingAmount(remainingAmount)
                 .build();
     }
 }
