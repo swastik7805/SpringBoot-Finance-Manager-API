@@ -3,6 +3,7 @@ package com.example.syfe.services;
 import com.example.syfe.dtos.responses.MonthlyReportResponse;
 import com.example.syfe.dtos.responses.YearlyReportResponse;
 import com.example.syfe.enums.TransactionType;
+import com.example.syfe.exceptions.BusinessRuleException;
 import com.example.syfe.models.Transaction;
 import com.example.syfe.models.User;
 import com.example.syfe.repositories.TransactionRepository;
@@ -26,6 +27,9 @@ public class ReportService {
     //Calculates total income by category, total expenses by category, and net savings for a given month.
     @Transactional(readOnly = true)
     public MonthlyReportResponse getMonthlyReport(int year, int month) {
+        if(month<1 || month>12) 
+            throw new BusinessRuleException("Invalid month: "+month+". Month must be between 1 and 12");
+
         User currentUser = userService.getCurrentUser();
         
         YearMonth yearMonth = YearMonth.of(year, month);

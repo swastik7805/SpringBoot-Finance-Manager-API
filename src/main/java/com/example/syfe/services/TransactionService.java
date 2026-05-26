@@ -55,11 +55,21 @@ public class TransactionService {
 
     //Fetches all transactions for the logged-in user with optional filters.
     @Transactional(readOnly = true)
-    public List<TransactionResponse> getAllTransactions(LocalDate startDate,LocalDate endDate,Long categoryId) {
-        User currentUser=userService.getCurrentUser();
-        return transactionRepository.findAllByUserWithFilters(currentUser,startDate,endDate,categoryId).stream()
-                .map(this::mapToResponse)
-                .toList();
+    public List<TransactionResponse> getAllTransactions(LocalDate startDate, LocalDate endDate, Long categoryId, String category) {
+        User currentUser = userService.getCurrentUser();
+
+        // If category name is present and categoryId is not
+        Long resolvedCategoryId = categoryId;
+        if (resolvedCategoryId==null && category!=null && !category.trim().isEmpty()) {
+            List<Category> categories=categoryRepository.findAccessibleByName(category.trim(), currentUser);
+            if(!categories.isEmpty()) resolvedCategoryId=categories.get(0).getId();
+            else return List.of();
+        }
+
+        return transactionRepository.findAllByUserWithFilters(currentUser,startDate,endDate,resolvedCategoryId)
+                                    .stream()
+                                    .map(this::mapToResponse)
+                                    .toList();
     }
 
     @Transactional

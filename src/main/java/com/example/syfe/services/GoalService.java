@@ -72,20 +72,22 @@ public class GoalService {
         return mapToResponse(goal, calculateProgress(goal, currentUser));
     }
 
-    //Updates an existing goal's target amount and target date.
+    //Updates an existing goal's target amount and/or target date.
     @Transactional
     public GoalResponse updateGoal(Long id, GoalUpdateRequest request) {
         User currentUser = userService.getCurrentUser();
 
         Goal goal=goalRepository.findByIdAndUser(id,currentUser).orElseThrow(()->new ResourceNotFoundException("Goal", "id", id));
 
-        // Validate new target date
-        if (!request.getTargetDate().isAfter(goal.getStartDate())) {
-            throw new BusinessRuleException("Target date must be chronologically after the start date");
+        if (request.getTargetAmount() != null) {
+            goal.setTargetAmount(request.getTargetAmount());
         }
 
-        goal.setTargetAmount(request.getTargetAmount());
-        goal.setTargetDate(request.getTargetDate());
+        if (request.getTargetDate() != null) {
+            if(!request.getTargetDate().isAfter(goal.getStartDate()))
+                throw new BusinessRuleException("Target date must be chronologically after the start date");
+            goal.setTargetDate(request.getTargetDate());
+        }
 
         Goal updated = goalRepository.save(goal);
         return mapToResponse(updated, calculateProgress(updated, currentUser));

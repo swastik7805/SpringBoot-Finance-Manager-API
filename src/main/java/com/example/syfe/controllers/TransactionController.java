@@ -28,14 +28,15 @@ public class TransactionController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    //GET /api/transactions?startDate=&endDate=&categoryId=
+    //GET /api/transactions?startDate=&endDate=&categoryId=&category=
     @GetMapping
     public ResponseEntity<Map<String, List<TransactionResponse>>> getAllTransactions(
             @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required=false) Long categoryId) {
+            @RequestParam(required=false) Long categoryId,
+            @RequestParam(required=false) String category) {
 
-        List<TransactionResponse> transactions = transactionService.getAllTransactions(startDate, endDate, categoryId);
+        List<TransactionResponse> transactions = transactionService.getAllTransactions(startDate, endDate, categoryId, category);
         return ResponseEntity.ok(Map.of("transactions", transactions));
     }
 
