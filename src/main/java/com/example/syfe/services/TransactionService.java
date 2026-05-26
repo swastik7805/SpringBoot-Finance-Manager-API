@@ -17,6 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Service class for managing financial transactions.
+ * Handles business logic for creating, retrieving, updating, and deleting user transactions.
+ */
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
@@ -25,6 +29,15 @@ public class TransactionService {
     private final CategoryRepository categoryRepository;
     private final UserService userService;
 
+    /**
+     * Creates a new transaction for the current user.
+     * Validates that the transaction date is not in the future and the category is accessible.
+     *
+     * @param request the transaction details
+     * @return the created transaction response
+     * @throws BusinessRuleException if the transaction date is in the future
+     * @throws ResourceNotFoundException if the specified category is not found
+     */
     @Transactional
     public TransactionResponse createTransaction(TransactionRequest request) {
         User currentUser = userService.getCurrentUser();
@@ -53,7 +66,15 @@ public class TransactionService {
         return mapToResponse(saved);
     }
 
-    //Fetches all transactions for the logged-in user with optional filters.
+    /**
+     * Fetches all transactions for the logged-in user with optional filters.
+     *
+     * @param startDate the optional start date filter
+     * @param endDate the optional end date filter
+     * @param categoryId the optional category ID filter
+     * @param category the optional category name filter
+     * @return a list of filtered transaction responses
+     */
     @Transactional(readOnly = true)
     public List<TransactionResponse> getAllTransactions(LocalDate startDate, LocalDate endDate, Long categoryId, String category) {
         User currentUser = userService.getCurrentUser();
@@ -72,6 +93,14 @@ public class TransactionService {
                                     .toList();
     }
 
+    /**
+     * Updates an existing transaction. Only provided fields are updated.
+     *
+     * @param id the ID of the transaction to update
+     * @param request the update details
+     * @return the updated transaction response
+     * @throws ResourceNotFoundException if the transaction or newly specified category is not found
+     */
     @Transactional
     public TransactionResponse updateTransaction(Long id, TransactionUpdateRequest request) {
         User currentUser = userService.getCurrentUser();
@@ -99,7 +128,12 @@ public class TransactionService {
         return mapToResponse(updated);
     }
 
-    //Deletes a transaction owned by the current user.
+    /**
+     * Deletes a transaction owned by the current user.
+     *
+     * @param id the ID of the transaction to delete
+     * @throws ResourceNotFoundException if the transaction is not found
+     */
     @Transactional
     public void deleteTransaction(Long id) {
         User currentUser = userService.getCurrentUser();

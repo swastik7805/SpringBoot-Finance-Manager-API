@@ -15,6 +15,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service class for user management and authentication.
+ * Handles user registration, login, and current user retrieval.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -23,7 +27,14 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
-    // Register a new user
+    /**
+     * Registers a new user with the provided details.
+     * Encrypts the password and ensures username uniqueness.
+     *
+     * @param request the registration details
+     * @return the authentication response containing user info
+     * @throws DuplicateResourceException if the username already exists
+     */
     @Transactional
     public AuthResponse registerUser(RegisterRequest request) {
 
@@ -48,7 +59,13 @@ public class UserService {
                 .build();
     }
 
-    // Authenticates a user via AuthenticationManager + sets SecurityContext for session creation.
+    /**
+     * Authenticates a user using the AuthenticationManager and sets the SecurityContext.
+     * This context is used to establish the HTTP session.
+     *
+     * @param request the login credentials
+     * @return the authentication response containing user info
+     */
     public AuthResponse loginUser(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -63,7 +80,13 @@ public class UserService {
                 .build();
     }
 
-    // Returns the currently authenticated User entity.
+    /**
+     * Retrieves the currently authenticated User entity from the database.
+     * Relies on the SecurityContextHolder to find the authenticated username.
+     *
+     * @return the current User entity
+     * @throws RuntimeException if the authenticated user cannot be found in the database
+     */
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username).orElseThrow(()->new RuntimeException("Authenticated user not found in database"));

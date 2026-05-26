@@ -14,6 +14,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for managing financial transactions.
+ * Provides endpoints to create, retrieve, filter, update, and delete transactions.
+ */
 @RestController
 @RequestMapping("/api/transactions")
 @RequiredArgsConstructor
@@ -21,14 +25,27 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    //POST /api/transactions
+    /**
+     * Creates a new financial transaction.
+     *
+     * @param request the transaction details
+     * @return the created transaction response with HTTP 201 Created status
+     */
     @PostMapping
     public ResponseEntity<TransactionResponse> createTransaction(@Valid @RequestBody TransactionRequest request) {
         TransactionResponse response = transactionService.createTransaction(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    //GET /api/transactions?startDate=&endDate=&categoryId=&category=
+    /**
+     * Retrieves all transactions for the authenticated user, with optional filters.
+     *
+     * @param startDate the optional start date filter
+     * @param endDate the optional end date filter
+     * @param categoryId the optional category ID filter
+     * @param category the optional category name filter
+     * @return a map containing the list of filtered transactions
+     */
     @GetMapping
     public ResponseEntity<Map<String, List<TransactionResponse>>> getAllTransactions(
             @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -40,14 +57,26 @@ public class TransactionController {
         return ResponseEntity.ok(Map.of("transactions", transactions));
     }
 
-    //PUT /api/transactions/{id}
+    /**
+     * Updates an existing transaction.
+     * Note: The transaction date cannot be updated.
+     *
+     * @param id the ID of the transaction to update
+     * @param request the update details
+     * @return the updated transaction response
+     */
     @PutMapping("/{id}")
     public ResponseEntity<TransactionResponse> updateTransaction(@PathVariable Long id, @Valid @RequestBody TransactionUpdateRequest request) {
         TransactionResponse response = transactionService.updateTransaction(id, request);
         return ResponseEntity.ok(response);
     }
 
-    //DELETE /api/transactions/{id}
+    /**
+     * Deletes a transaction by its ID.
+     *
+     * @param id the ID of the transaction to delete
+     * @return a success message confirming deletion
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteTransaction(@PathVariable Long id) {
         transactionService.deleteTransaction(id);

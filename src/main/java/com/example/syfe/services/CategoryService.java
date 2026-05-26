@@ -14,6 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
+/**
+ * Service class for managing category operations.
+ * Handles business logic for creating, retrieving, and deleting categories.
+ */
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
@@ -21,7 +25,15 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final UserService userService;
 
-    //Creates a custom, user-specific category.
+    /**
+     * Creates a custom, user-specific category.
+     * Validates that a category with the same name does not already exist for the user
+     * or as a default category.
+     *
+     * @param request the category creation details
+     * @return the created category as a CategoryResponse
+     * @throws DuplicateResourceException if a duplicate category is found
+     */
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
         User currentUser = userService.getCurrentUser();
@@ -48,7 +60,12 @@ public class CategoryService {
         return mapToResponse(saved);
     }
 
-    //Returns all categories accessible to the logged-in user
+    /**
+     * Retrieves all categories accessible to the currently authenticated user.
+     * This includes both system default categories and user-specific custom categories.
+     *
+     * @return a list of CategoryResponse objects
+     */
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
         User currentUser = userService.getCurrentUser();
@@ -58,7 +75,14 @@ public class CategoryService {
                 .toList();
     }
 
-    // Deletes a user's custom category by name.
+    /**
+     * Deletes a user's custom category by its name.
+     * Default categories and categories currently referenced by transactions cannot be deleted.
+     *
+     * @param name the name of the custom category to delete
+     * @throws ResourceNotFoundException if the category is not found
+     * @throws BusinessRuleException if attempting to delete a default category or one with associated transactions
+     */
     @Transactional
     public void deleteCategory(String name) {
         User currentUser=userService.getCurrentUser();

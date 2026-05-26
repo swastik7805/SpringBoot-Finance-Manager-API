@@ -17,6 +17,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Service class for managing savings goals.
+ * Handles business logic for establishing, tracking progress, updating, and deleting goals.
+ */
 @Service
 @RequiredArgsConstructor
 public class GoalService {
@@ -25,7 +29,15 @@ public class GoalService {
     private final TransactionRepository transactionRepository;
     private final UserService userService;
 
-    //Creates a new savings goal.
+    /**
+     * Creates a new savings goal for the current user.
+     * Validates that the goal name is unique and the target date is after the start date.
+     *
+     * @param request the goal creation details
+     * @return the created goal response including initial progress
+     * @throws DuplicateResourceException if a goal with the same name already exists
+     * @throws BusinessRuleException if date validation fails
+     */
     @Transactional
     public GoalResponse createGoal(GoalRequest request) {
         User currentUser = userService.getCurrentUser();
@@ -53,7 +65,12 @@ public class GoalService {
         return mapToResponse(saved, calculateProgress(saved, currentUser));
     }
 
-    //Retrieves all goals for the logged-in user.
+    /**
+     * Retrieves all savings goals for the currently authenticated user.
+     * Progress is calculated dynamically for each goal based on transactions.
+     *
+     * @return a list of goal responses
+     */
     @Transactional(readOnly = true)
     public List<GoalResponse> getAllGoals() {
         User currentUser = userService.getCurrentUser();
@@ -64,7 +81,13 @@ public class GoalService {
                 .toList();
     }
 
-    //Retrieves a single goal by its ID.
+    /**
+     * Retrieves a single goal by its ID for the current user.
+     *
+     * @param id the ID of the goal
+     * @return the goal response including progress
+     * @throws ResourceNotFoundException if the goal is not found
+     */
     @Transactional(readOnly = true)
     public GoalResponse getGoalById(Long id) {
         User currentUser = userService.getCurrentUser();
@@ -72,7 +95,16 @@ public class GoalService {
         return mapToResponse(goal, calculateProgress(goal, currentUser));
     }
 
-    //Updates an existing goal's target amount and/or target date.
+    /**
+     * Updates an existing goal's target amount and/or target date.
+     * Retains existing values for fields not provided in the request.
+     *
+     * @param id the ID of the goal to update
+     * @param request the update details
+     * @return the updated goal response
+     * @throws ResourceNotFoundException if the goal is not found
+     * @throws BusinessRuleException if the new target date is invalid
+     */
     @Transactional
     public GoalResponse updateGoal(Long id, GoalUpdateRequest request) {
         User currentUser = userService.getCurrentUser();
@@ -93,7 +125,12 @@ public class GoalService {
         return mapToResponse(updated, calculateProgress(updated, currentUser));
     }
 
-    //Deletes a goal.
+    /**
+     * Deletes a goal by its ID for the current user.
+     *
+     * @param id the ID of the goal to delete
+     * @throws ResourceNotFoundException if the goal is not found
+     */
     @Transactional
     public void deleteGoal(Long id) {
         User currentUser = userService.getCurrentUser();

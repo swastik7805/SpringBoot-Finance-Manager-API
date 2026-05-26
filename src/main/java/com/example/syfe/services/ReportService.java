@@ -17,6 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Service class for generating financial reports.
+ * Provides logic to aggregate transactions into monthly and yearly summaries.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReportService {
@@ -24,7 +28,14 @@ public class ReportService {
     private final TransactionRepository transactionRepository;
     private final UserService userService;
 
-    //Calculates total income by category, total expenses by category, and net savings for a given month.
+    /**
+     * Calculates total income by category, total expenses by category, and net savings for a given month.
+     *
+     * @param year the year of the report
+     * @param month the month of the report (1-12)
+     * @return the monthly report response
+     * @throws BusinessRuleException if the month is invalid
+     */
     @Transactional(readOnly = true)
     public MonthlyReportResponse getMonthlyReport(int year, int month) {
         if(month<1 || month>12) 
@@ -41,7 +52,12 @@ public class ReportService {
         return buildMonthlyReport(year, month, transactions);
     }
 
-    //Aggregates category-level income and expenses into a yearly overview.
+    /**
+     * Aggregates category-level income and expenses into a yearly overview.
+     *
+     * @param year the year for the report
+     * @return the yearly report response
+     */
     @Transactional(readOnly = true)
     public YearlyReportResponse getYearlyReport(int year) {
         User currentUser = userService.getCurrentUser();
