@@ -14,9 +14,7 @@ import java.util.Map;
 public class MonthlyReportResponse {
     private int year;
     private int month;
-    private BigDecimal totalIncome;
-    private BigDecimal totalExpenses;
+    private Map<String, BigDecimal> totalIncome;
+    private Map<String, BigDecimal> totalExpenses;
     private BigDecimal netSavings;
-    private Map<String, BigDecimal> incomeByCategory;
-    private Map<String, BigDecimal> expensesByCategory;
 }

@@ -13,18 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class YearlyReportResponse {
     private int year;
-    private BigDecimal totalIncome;
-    private BigDecimal totalExpenses;
+    private Map<String, BigDecimal> totalIncome;
+    private Map<String, BigDecimal> totalExpenses;
     private BigDecimal netSavings;
-    private Map<Integer, MonthlySummary> monthlyBreakdown;
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MonthlySummary {
-        private BigDecimal totalIncome;
-        private BigDecimal totalExpenses;
-        private BigDecimal netSavings;
-    }
 }

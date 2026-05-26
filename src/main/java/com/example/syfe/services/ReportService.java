@@ -15,7 +15,6 @@ import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +37,7 @@ public class ReportService {
         return buildMonthlyReport(year, month, transactions);
     }
 
-    //Aggregates monthly data into a comprehensive yearly overview.
+    //Aggregates category-level income and expenses into a yearly overview.
     @Transactional(readOnly = true)
     public YearlyReportResponse getYearlyReport(int year) {
         User currentUser = userService.getCurrentUser();
@@ -48,36 +47,27 @@ public class ReportService {
 
         List<Transaction> transactions = transactionRepository.findByUserAndDateBetween(currentUser, startDate, endDate);
 
+        Map<String, BigDecimal> incomeByCategory = new HashMap<>();
+        Map<String, BigDecimal> expensesByCategory = new HashMap<>();
         BigDecimal yearlyIncome = BigDecimal.ZERO;
         BigDecimal yearlyExpenses = BigDecimal.ZERO;
-        Map<Integer, YearlyReportResponse.MonthlySummary> monthlyBreakdown = new HashMap<>();
 
-        // Group transactions by month
-        Map<Integer, List<Transaction>> transactionsByMonth = transactions.stream()
-                .collect(Collectors.groupingBy(t -> t.getDate().getMonthValue()));
-
-        for (int month = 1; month <= 12; month++) {
-            List<Transaction> monthTransactions = transactionsByMonth.getOrDefault(month, List.of());
-            
-            BigDecimal monthIncome = sumTransactions(monthTransactions, TransactionType.INCOME);
-            BigDecimal monthExpenses = sumTransactions(monthTransactions, TransactionType.EXPENSE);
-            
-            yearlyIncome = yearlyIncome.add(monthIncome);
-            yearlyExpenses = yearlyExpenses.add(monthExpenses);
-
-            monthlyBreakdown.put(month, YearlyReportResponse.MonthlySummary.builder()
-                    .totalIncome(monthIncome)
-                    .totalExpenses(monthExpenses)
-                    .netSavings(monthIncome.subtract(monthExpenses))
-                    .build());
+        for (Transaction t : transactions) {
+            String categoryName = t.getCategory().getName();
+            if (t.getType() == TransactionType.INCOME) {
+                yearlyIncome = yearlyIncome.add(t.getAmount());
+                incomeByCategory.merge(categoryName, t.getAmount(), BigDecimal::add);
+            } else {
+                yearlyExpenses = yearlyExpenses.add(t.getAmount());
+                expensesByCategory.merge(categoryName, t.getAmount(), BigDecimal::add);
+            }
         }
 
         return YearlyReportResponse.builder()
                 .year(year)
-                .totalIncome(yearlyIncome)
-                .totalExpenses(yearlyExpenses)
+                .totalIncome(incomeByCategory)
+                .totalExpenses(expensesByCategory)
                 .netSavings(yearlyIncome.subtract(yearlyExpenses))
-                .monthlyBreakdown(monthlyBreakdown)
                 .build();
     }
 
@@ -86,7 +76,7 @@ public class ReportService {
     private MonthlyReportResponse buildMonthlyReport(int year, int month, List<Transaction> transactions) {
         Map<String, BigDecimal> incomeByCategory = new HashMap<>();
         Map<String, BigDecimal> expensesByCategory = new HashMap<>();
-        
+
         BigDecimal totalIncome = BigDecimal.ZERO;
         BigDecimal totalExpenses = BigDecimal.ZERO;
 
@@ -104,18 +94,9 @@ public class ReportService {
         return MonthlyReportResponse.builder()
                 .year(year)
                 .month(month)
-                .totalIncome(totalIncome)
-                .totalExpenses(totalExpenses)
+                .totalIncome(incomeByCategory)
+                .totalExpenses(expensesByCategory)
                 .netSavings(totalIncome.subtract(totalExpenses))
-                .incomeByCategory(incomeByCategory)
-                .expensesByCategory(expensesByCategory)
                 .build();
-    }
-
-    private BigDecimal sumTransactions(List<Transaction> transactions, TransactionType type) {
-        return transactions.stream()
-                .filter(t -> t.getType() == type)
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

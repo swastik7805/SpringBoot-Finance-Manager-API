@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -63,18 +63,33 @@ class ReportServiceTest {
 
         MonthlyReportResponse response = reportService.getMonthlyReport(2023, 10);
 
-        assertEquals(new BigDecimal("5000"), response.getTotalIncome());
-        assertEquals(new BigDecimal("1000"), response.getTotalExpenses());
+        // totalIncome and totalExpenses are now Maps of category -> amount
+        assertEquals(new BigDecimal("5000"), response.getTotalIncome().get("Salary"));
+        assertEquals(new BigDecimal("1000"), response.getTotalExpenses().get("Food"));
         assertEquals(new BigDecimal("4000"), response.getNetSavings());
-        assertEquals(new BigDecimal("5000"), response.getIncomeByCategory().get("Salary"));
-        assertEquals(new BigDecimal("1000"), response.getExpensesByCategory().get("Food"));
+        assertNotNull(response.getTotalIncome());
+        assertNotNull(response.getTotalExpenses());
+    }
+
+    @Test
+    void getMonthlyReport_EmptyTransactions_ReturnsZeroNetSavings() {
+        when(userService.getCurrentUser()).thenReturn(user);
+        when(transactionRepository.findByUserAndDateBetween(eq(user), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(List.of());
+
+        MonthlyReportResponse response = reportService.getMonthlyReport(2023, 10);
+
+        assertTrue(response.getTotalIncome().isEmpty());
+        assertTrue(response.getTotalExpenses().isEmpty());
+        assertEquals(BigDecimal.ZERO, response.getNetSavings());
     }
 
     @Test
     void getYearlyReport_AggregatesCorrectly() {
         LocalDate janDate = LocalDate.of(2023, 1, 15);
         Category incomeCat = Category.builder().name("Salary").build();
-        
+        Category expenseCat = Category.builder().name("Rent").build();
+
         Transaction t1 = Transaction.builder()
                 .amount(new BigDecimal("5000"))
                 .type(TransactionType.INCOME)
@@ -82,19 +97,23 @@ class ReportServiceTest {
                 .date(janDate)
                 .build();
 
+        Transaction t2 = Transaction.builder()
+                .amount(new BigDecimal("1000"))
+                .type(TransactionType.EXPENSE)
+                .category(expenseCat)
+                .date(janDate)
+                .build();
+
         when(userService.getCurrentUser()).thenReturn(user);
         when(transactionRepository.findByUserAndDateBetween(eq(user), any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(List.of(t1));
+                .thenReturn(List.of(t1, t2));
 
         YearlyReportResponse response = reportService.getYearlyReport(2023);
 
-        assertEquals(new BigDecimal("5000"), response.getTotalIncome());
-        assertEquals(new BigDecimal("0"), response.getTotalExpenses());
-        assertEquals(new BigDecimal("5000"), response.getNetSavings());
-        
-        // Month 1 (January) should have the 5000 income
-        assertEquals(new BigDecimal("5000"), response.getMonthlyBreakdown().get(1).getTotalIncome());
-        // Month 2 (February) should have 0 income
-        assertEquals(new BigDecimal("0"), response.getMonthlyBreakdown().get(2).getTotalIncome());
+        // totalIncome and totalExpenses are now Maps of category -> amount
+        assertEquals(new BigDecimal("5000"), response.getTotalIncome().get("Salary"));
+        assertEquals(new BigDecimal("1000"), response.getTotalExpenses().get("Rent"));
+        assertEquals(new BigDecimal("4000"), response.getNetSavings());
+        assertEquals(2023, response.getYear());
     }
 }
