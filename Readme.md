@@ -1,6 +1,6 @@
 # Personal Finance Manager API
 
-This is a robust, production-ready REST API for managing personal finances, including tracking income/expenses, setting savings goals, and generating financial reports. It is built using Spring Boot 3.x and adheres to a strict layered architecture.
+This is a production-ready REST API for managing personal finances, including tracking income/expenses, setting savings goals, and generating financial reports. It is built using Spring Boot 3.x and adheres to a strict layered architecture.
 
 ## Setup Instructions
 
