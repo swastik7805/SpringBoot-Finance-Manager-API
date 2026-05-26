@@ -27,9 +27,9 @@ public class CategoryController {
 
     //GET /api/categories
     @GetMapping
-    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
+    public ResponseEntity<Map<String, List<CategoryResponse>>> getAllCategories() {
         List<CategoryResponse> categories = categoryService.getAllCategories();
-        return ResponseEntity.ok(categories);
+        return ResponseEntity.ok(Map.of("categories", categories));
     }
 
     // DELETE /api/categories/{name}

@@ -20,6 +20,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
             @Param("type") TransactionType type,
             @Param("user") User user);
 
+    @Query("SELECT c FROM Category c WHERE c.name = :name AND (c.isDefault = true OR c.user = :user)")
+    List<Category> findAccessibleByName(@Param("name") String name, @Param("user") User user);
+
     Optional<Category> findByNameAndUserAndIsDefaultFalse(String name, User user);
 
     @Query("SELECT c FROM Category c WHERE c.id = :id AND (c.isDefault = true OR c.user = :user)")

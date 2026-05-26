@@ -14,9 +14,5 @@ public class TransactionUpdateRequest {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
-    @NotNull(message = "Category ID is required")
-    private Long categoryId;
-
-    @NotNull(message = "Transaction type is required (INCOME or EXPENSE)")
-    private String type;
+    private String category;
 }

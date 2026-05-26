@@ -30,13 +30,13 @@ public class TransactionController {
 
     //GET /api/transactions?startDate=&endDate=&categoryId=
     @GetMapping
-    public ResponseEntity<List<TransactionResponse>> getAllTransactions(
+    public ResponseEntity<Map<String, List<TransactionResponse>>> getAllTransactions(
             @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required=false) Long categoryId) {
 
-        List<TransactionResponse> transactions=transactionService.getAllTransactions(startDate,endDate,categoryId);
-        return ResponseEntity.ok(transactions);
+        List<TransactionResponse> transactions = transactionService.getAllTransactions(startDate, endDate, categoryId);
+        return ResponseEntity.ok(Map.of("transactions", transactions));
     }
 
     //PUT /api/transactions/{id}

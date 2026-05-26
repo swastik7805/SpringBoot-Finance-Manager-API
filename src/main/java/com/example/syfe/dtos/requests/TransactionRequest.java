@@ -18,9 +18,6 @@ public class TransactionRequest {
     @NotNull(message = "Date is required")
     private LocalDate date;
 
-    @NotNull(message = "Category ID is required")
-    private Long categoryId;
-
-    @NotNull(message = "Transaction type is required (INCOME or EXPENSE)")
-    private String type;
+    @NotBlank(message = "Category name is required")
+    private String category;
 }

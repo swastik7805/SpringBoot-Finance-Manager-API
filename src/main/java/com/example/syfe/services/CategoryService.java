@@ -93,10 +93,9 @@ public class CategoryService {
 
     private CategoryResponse mapToResponse(Category category) {
         return CategoryResponse.builder()
-                .id(category.getId())
                 .name(category.getName())
                 .type(category.getType().name())
-                .isDefault(category.isDefault())
+                .isCustom(!category.isDefault())
                 .build();
     }
 }

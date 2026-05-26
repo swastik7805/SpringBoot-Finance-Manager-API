@@ -25,17 +25,20 @@ public class TransactionService {
     private final CategoryRepository categoryRepository;
     private final UserService userService;
 
-    // Creates a new transaction with full validation
     @Transactional
     public TransactionResponse createTransaction(TransactionRequest request) {
         User currentUser = userService.getCurrentUser();
-        TransactionType type = parseTransactionType(request.getType());
 
         if (request.getDate().isAfter(LocalDate.now())) {
             throw new BusinessRuleException("Transaction date cannot be in the future");
         }
 
-        Category category=categoryRepository.findAccessibleById(request.getCategoryId(),currentUser).orElseThrow(()->new ResourceNotFoundException("Category","id",request.getCategoryId()));
+        List<Category> categories = categoryRepository.findAccessibleByName(request.getCategory().trim(), currentUser);
+        if (categories.isEmpty()) {
+            throw new ResourceNotFoundException("Category", "name", request.getCategory());
+        }
+        Category category = categories.get(0);
+        TransactionType type = category.getType();
 
         Transaction transaction=Transaction.builder()
                                 .amount(request.getAmount())
@@ -59,21 +62,28 @@ public class TransactionService {
                 .toList();
     }
 
-    //Updates all fields of a transaction except the date.
     @Transactional
     public TransactionResponse updateTransaction(Long id, TransactionUpdateRequest request) {
         User currentUser = userService.getCurrentUser();
-        TransactionType type = parseTransactionType(request.getType());
 
         Transaction transaction = transactionRepository.findByIdAndUser(id,currentUser).orElseThrow(()->new ResourceNotFoundException("Transaction", "id", id));
 
-        // Validate: category must exist and be accessible to this user
-        Category category=categoryRepository.findAccessibleById(request.getCategoryId(),currentUser).orElseThrow(()->new ResourceNotFoundException("Category", "id", request.getCategoryId()));
+        if (request.getCategory() != null && !request.getCategory().trim().isEmpty()) {
+            List<Category> categories = categoryRepository.findAccessibleByName(request.getCategory().trim(), currentUser);
+            if (categories.isEmpty()) {
+                throw new ResourceNotFoundException("Category", "name", request.getCategory());
+            }
+            Category category = categories.get(0);
+            transaction.setCategory(category);
+            transaction.setType(category.getType());
+        }
 
-        transaction.setAmount(request.getAmount());
-        transaction.setDescription(request.getDescription());
-        transaction.setType(type);
-        transaction.setCategory(category);
+        if (request.getAmount() != null) {
+            transaction.setAmount(request.getAmount());
+        }
+        if (request.getDescription() != null) {
+            transaction.setDescription(request.getDescription());
+        }
 
         Transaction updated = transactionRepository.save(transaction);
         return mapToResponse(updated);
@@ -90,16 +100,6 @@ public class TransactionService {
     }
 
     //Helpers 
-    private TransactionType parseTransactionType(String type) {
-        try
-        {
-            return TransactionType.valueOf(type.trim().toUpperCase());
-        }
-        catch (IllegalArgumentException e) {
-            throw new BusinessRuleException("Invalid transaction type: '"+type+"'. Must be INCOME or EXPENSE");
-        }
-    }
-
     private TransactionResponse mapToResponse(Transaction transaction) {
         return TransactionResponse.builder()
                 .id(transaction.getId())
@@ -107,10 +107,7 @@ public class TransactionService {
                 .description(transaction.getDescription())
                 .date(transaction.getDate())
                 .type(transaction.getType().name())
-                .categoryId(transaction.getCategory().getId())
-                .categoryName(transaction.getCategory().getName())
-                .createdAt(transaction.getCreatedAt())
-                .updatedAt(transaction.getUpdatedAt())
+                .category(transaction.getCategory().getName())
                 .build();
     }
 }
